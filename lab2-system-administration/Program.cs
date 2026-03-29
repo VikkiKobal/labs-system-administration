@@ -13,77 +13,59 @@ namespace Lab2
         {
             string testApp = @"C:\Users\Vision\source\repos\ConsoleTest\ConsoleTest\bin\Debug\net8.0\ConsoleTest.exe";
 
-            Console.WriteLine("=== Process Manager Started ===");
-
             ProcessInformation pi1 = WinApiFuncs.CreateProcess(testApp, WinApiFuncs.CREATE_NEW_CONSOLE);
-            Console.WriteLine($"[START] Process 1 (PID: {pi1.dwProcessId})");
-
             ProcessInformation pi2 = WinApiFuncs.CreateProcess(testApp, WinApiFuncs.CREATE_NEW_CONSOLE);
-            Console.WriteLine($"[START] Process 2 (PID: {pi2.dwProcessId})");
-
             ProcessInformation pi3 = WinApiFuncs.CreateProcess(testApp, WinApiFuncs.CREATE_NEW_CONSOLE);
-            Console.WriteLine($"[START] Process 3 (PID: {pi3.dwProcessId})");
 
             if (pi1.hProcess == WinApiFuncs.INVALID_HANDLE_VALUE ||
                 pi2.hProcess == WinApiFuncs.INVALID_HANDLE_VALUE ||
                 pi3.hProcess == WinApiFuncs.INVALID_HANDLE_VALUE)
             {
-                Console.WriteLine("Failed to create one or more processes.");
+                Console.WriteLine("Не вдалося створити процеси.");
                 return;
             }
 
-            IntPtr[] handles = { pi1.hProcess, pi2.hProcess, pi3.hProcess };
+            Console.WriteLine($"P1 PID={pi1.dwProcessId}, P2 PID={pi2.dwProcessId}, P3 PID={pi3.dwProcessId}");
 
-            Console.WriteLine("\nWaiting for the first process to exit...");
+            IntPtr[] h = { pi1.hProcess, pi2.hProcess, pi3.hProcess };
 
-            uint waitResult = WinApiFuncs.WaitForMultipleObjects(3, handles, false, WinApiFuncs.INFINITE);
+            uint r = WinApiFuncs.WaitForMultipleObjects(3, h, false, WinApiFuncs.INFINITE);
 
-            if (waitResult == WinApiFuncs.WAIT_OBJECT_0 + 2)
+            if (r == WinApiFuncs.WAIT_OBJECT_0 + 2)
             {
-                Console.WriteLine("\n>>> Process 3 finished FIRST.");
-                Console.WriteLine(">>> Terminating Process 2 and waiting for Process 1...");
-
+                Console.WriteLine("Спочатку завершився P3, завершуєм P2, чекаєм P1.");
                 WinApiFuncs.TerminateProcess(pi2.hProcess, 0);
-
                 WinApiFuncs.WaitForSingleObject(pi1.hProcess, WinApiFuncs.INFINITE);
             }
             else
             {
-                int firstExitIdx = (int)(waitResult - WinApiFuncs.WAIT_OBJECT_0);
-                Console.WriteLine($"\n>>> Process {firstExitIdx + 1} finished first (not P3).");
-                Console.WriteLine(">>> Waiting for all remaining processes to finish...");
-
-                WinApiFuncs.WaitForMultipleObjects(3, handles, true, WinApiFuncs.INFINITE);
+                Console.WriteLine("Спочатку завершився не P3, чекаєм всі процеси.");
+                WinApiFuncs.WaitForMultipleObjects(3, h, true, WinApiFuncs.INFINITE);
             }
 
-            Console.WriteLine("\n" + new string('-', 30));
-            Console.WriteLine("FINAL PROCESS STATUS:");
-            PrintStatus(1, pi1.hProcess);
-            PrintStatus(2, pi2.hProcess);
-            PrintStatus(3, pi3.hProcess);
-            Console.WriteLine(new string('-', 30));
+            Console.WriteLine("Стан:");
+            PrintExit(1, pi1.hProcess);
+            PrintExit(2, pi2.hProcess);
+            PrintExit(3, pi3.hProcess);
 
-            Cleanup(pi1);
-            Cleanup(pi2);
-            Cleanup(pi3);
-
-            Console.WriteLine("\nTask complete. Press Enter to close.");
+            Close(pi1);
+            Close(pi2);
+            Close(pi3);
+            Console.WriteLine("Готово. Enter…");
             Console.ReadLine();
         }
 
-        static void PrintStatus(int id, IntPtr hProcess)
+        static void PrintExit(int n, IntPtr hp)
         {
-            WinApiFuncs.GetExitCodeProcess(hProcess, out uint exitCode);
-            string status = (exitCode == WinApiFuncs.STILL_ACTIVE) ? "Running" : $"Finished (Code: {exitCode})";
-            Console.WriteLine($"Process {id}: {status}");
+            WinApiFuncs.GetExitCodeProcess(hp, out uint code);
+            string s = code == WinApiFuncs.STILL_ACTIVE ? "ще працює" : $"код виходу {code}";
+            Console.WriteLine($"  P{n}: {s}");
         }
 
-        static void Cleanup(ProcessInformation pi)
+        static void Close(ProcessInformation pi)
         {
-            if (pi.hThread != IntPtr.Zero && pi.hThread != WinApiFuncs.INVALID_HANDLE_VALUE)
-                WinApiFuncs.CloseHandle(pi.hThread);
-            if (pi.hProcess != IntPtr.Zero && pi.hProcess != WinApiFuncs.INVALID_HANDLE_VALUE)
-                WinApiFuncs.CloseHandle(pi.hProcess);
+            WinApiFuncs.CloseHandle(pi.hThread);
+            WinApiFuncs.CloseHandle(pi.hProcess);
         }
     }
 }
