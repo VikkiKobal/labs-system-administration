@@ -51,7 +51,7 @@ namespace Lab2
             Close(pi1);
             Close(pi2);
             Close(pi3);
-            Console.WriteLine("Готово. Enter…");
+            Console.WriteLine("Готово.");
             Console.ReadLine();
         }
 
