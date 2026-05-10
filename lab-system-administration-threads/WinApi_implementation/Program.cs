@@ -1,4 +1,4 @@
-// WinApi_implementation of the task
+// WinApi_implementation of the task, VARIANT - 7
 
 using System;
 using System.Globalization;
