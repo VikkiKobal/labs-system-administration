@@ -1,4 +1,4 @@
-// C# implementation of the task
+// C# implementation of the task, VARIANT - 7
 
 using System;
 using System.Threading;
