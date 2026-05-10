@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using WinApi;
 
-// WinAPI of the task, variant 1.1 / 2.7
+// WinAPI_implementation of the task, variant 1.1 / 2.7
 class Program
 {
     static volatile bool stopRequested = false;
